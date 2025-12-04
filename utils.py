@@ -10,16 +10,12 @@ import random
 is_local = False
 ## TRAINing CONFIG --------------------------
 
-IGCSE_HOME = "/workspace/IGCSE_DATA"
-if is_local:
-    IGCSE_HOME = "/mnt/wsl/Drive/IGCSE-NEW/"
 
 MULTIPLE_CHOICE_PAPERS = ["9702_1", "0625_1", "0625_2"]
 
-MODEL_NAME = "ftv4-ocr"
+MODEL_NAME = "ftv5-ocr"
 MODEL_NAME_SUFFIX = "_b16"
-MODEL_OUTPUT_DIR = "ft4-deepseekocr"
-
+MODEL_OUTPUT_DIR = "ft5-deepseekocr"
 # PROMPT = "<image>\n<|grounding|>Convert the document to markdown. extract the questions elements "
 PROMPT = "<image>\n<|grounding|>Convert the document to markdown."
 
@@ -28,6 +24,20 @@ PROMPT_MULTI_CHOICE = "<image>\n<|grounding|>Convert the document to markdown. a
 SYNTHETIC_FILENAME = "synthetic_v1_ft4-deepseek.json"
 REAL_FILENAME = "mathpix_v1_pdfext_v1_ft4-deepseek.json"
 
+# NOTE: ******************* DIR ****************
+
+# IGCSE_HOME = "./IGCSE_DATA"
+# BASE_MODEL_PATH = "./deepseek_ocr"
+# OUTPUT_DIR = "./outputs"
+# LOG_DIR = "./logs"
+IGCSE_HOME = "/kaggle/input/igcse-dataset/IGCSE_DATA"
+if is_local:
+    IGCSE_HOME = "/mnt/wsl/Drive/IGCSE-NEW/"
+BASE_MODEL_PATH = (
+    "/kaggle/input/deepseekocr/transformers/unsloth/1/deepseek_ocr"
+)
+OUTPUT_DIR = "/kaggle/working/outputs"
+LOG_DIR = "/kaggle/working/logs"
 igcse_root = Path(IGCSE_HOME)
 
 ## Download CONFIG --------------------------
@@ -86,12 +96,12 @@ def convert_to_conversation(image_pil, raw_output, instruction):
     return {"messages": conversation}
 
 
-def get_image(doc, page_number: int):
-    page = doc[page_number - 1]
-    mat = fitz.Matrix(2, 2)
-    pix = page.get_pixmap(matrix=mat)
-    img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
-    return img
+# def get_image(doc, page_number: int):
+#     page = doc[page_number - 1]
+#     mat = fitz.Matrix(2, 2)
+#     pix = page.get_pixmap(matrix=mat)
+#     img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
+#     return img
 
 
 def add_training_data_to_list(converted_dataset, p):
@@ -159,8 +169,8 @@ def load_training_dataset():
     pprint(synthetic_dataset[0])
     print("******************************************************")
 
-    converted_dataset = synthetic_dataset[1000:]
-    validation_dataset = synthetic_dataset[:1000]
+    converted_dataset = synthetic_dataset[1500:]
+    validation_dataset = synthetic_dataset[:1500]
     return converted_dataset, validation_dataset
 
 
