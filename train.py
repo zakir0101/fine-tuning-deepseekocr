@@ -1,31 +1,24 @@
-import json
-from pathlib import Path
 import os
-import sys
 import tempfile
 
-# Create a proper temp directory
-temp_dir = tempfile.mkdtemp(prefix="unsloth_")
+# CRITICAL: Set this BEFORE any imports
+# unsloth_zoo looks for this specific variable
+compile_dir = tempfile.mkdtemp(prefix="unsloth_compile_")
+os.environ["HOME"] = compile_dir  # unsloth_zoo uses HOME to find cache dir
+os.makedirs(f"{compile_dir}/.cache", exist_ok=True)
 
-# Set EVERY possible cache variable unsloth might look for
-os.environ["UNSLOTH_COMPILE_DIR"] = temp_dir
-os.environ["UNSLOTH_CACHE_DIR"] = temp_dir
-os.environ["UNSLOTH_ZOO_COMPILE_DIR"] = temp_dir
-os.environ["COMPILE_DIR"] = temp_dir
-os.environ["TMPDIR"] = temp_dir
-os.environ["TEMP"] = temp_dir
-os.environ["TMP"] = temp_dir
-
-# Also HF cache
+# Also set all cache paths
 os.environ["HF_HOME"] = "/tmp/hf_cache"
 os.environ["TRANSFORMERS_CACHE"] = "/tmp/hf_cache"
-
 os.makedirs("/tmp/hf_cache", exist_ok=True)
 
 os.environ["UNSLOTH_WARN_UNINITIALIZED"] = "0"
 
 from unsloth import is_bf16_supported, FastVisionModel
 
+import json
+from pathlib import Path
+import sys
 import fitz
 import torch
 import math
