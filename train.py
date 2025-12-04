@@ -45,7 +45,7 @@ model, tokenizer = FastVisionModel.from_pretrained(
     auto_model=AutoModel,
     trust_remote_code=True,
     unsloth_force_compile=True,
-    use_gradient_checkpointing="unsloth",  # True or "unsloth" for long context
+    use_gradient_checkpointing=True,  # "unsloth",  # True or "unsloth" for long context
 )
 
 model = FastVisionModel.get_peft_model(
@@ -132,7 +132,7 @@ trainer = Trainer(
         disable_tqdm=True if local_rank != 0 else False,
         # DDP SETTINGS:
         ddp_find_unused_parameters=True,
-        dataloader_num_workers=0,
+        dataloader_num_workers=8,
         # You MUST put the below items for vision finetuning:
         remove_unused_columns=False,
         # --- NEW SETTINGS ADDED BELOW ---
