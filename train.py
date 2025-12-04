@@ -47,7 +47,7 @@ model, tokenizer = FastVisionModel.from_pretrained(
     device_map={"": f"cuda:{local_rank}"},
     auto_model=AutoModel,
     trust_remote_code=True,
-    unsloth_force_compile=True,
+    unsloth_force_compile=False,
     use_gradient_checkpointing=False,  # "unsloth",  # True or "unsloth" for long context
 )
 
