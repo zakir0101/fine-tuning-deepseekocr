@@ -1,6 +1,13 @@
 # from unsloth import FastVisionModel
 # from transformers import AutoModel
 import os
+
+# Fix CUDA library path
+os.environ["LD_LIBRARY_PATH"] = (
+    "/usr/local/cuda/lib64:/usr/local/cuda/lib64/stubs:"
+    + os.environ.get("LD_LIBRARY_PATH", "")
+)
+os.environ["CUDA_HOME"] = "/usr/local/cuda"
 import builtins
 from utils import MODEL_NAME, MODEL_NAME_SUFFIX, PROMPT
 from vllm import LLM, SamplingParams
