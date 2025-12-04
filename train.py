@@ -18,6 +18,7 @@ import io
 from transformers import Trainer, TrainingArguments, AutoModel
 from collator import DeepSeekOCRDataCollator
 from transformers import TrainerCallback
+from torch.utils.data import Dataset, random_split
 
 # from deepseek_ocr.modeling_deepseekocr import (
 #     format_messages,
@@ -30,6 +31,8 @@ from utils import (
     LOG_DIR,
     MODEL_NAME,
     OUTPUT_DIR,
+    PROMPT,
+    convert_to_conversation,
     load_training_dataset,
 )
 
@@ -71,9 +74,42 @@ model = FastVisionModel.get_peft_model(
 
 
 # root = Path("/home/zakir/IGCSE_DATA")
-converted_dataset, validation_dataset = load_training_dataset()
+# converted_dataset, validation_dataset = load_training_dataset()
+# --- 1. THE NEW DATASET CLASS ---
+class DeepSeekFastDataset(Dataset):
+    def __init__(self, meta_file_path, instruction):
+        print(f"Loading metadata from {meta_file_path}...")
+        with open(meta_file_path, "r") as f:
+            self.data = json.load(f)
+        self.instruction = instruction
+        print(f"Dataset loaded. Size: {len(self.data)}")
+
+    def __len__(self):
+        return len(self.data)
+
+    def __getitem__(self, idx):
+        item = self.data[idx]
+
+        try:
+            # Ultra-fast load from disk
+            image = Image.open(item["img_path"]).convert("RGB")
+        except:
+            # Fallback for corruption
+            image = Image.new("RGB", (640, 640), color="black")
+
+        # Use your existing utility function
+        return convert_to_conversation(
+            image, item["raw_output"], self.instruction
+        )
 
 
+# converted_dataset, validation_dataset = load_training_dataset()
+full_dataset = DeepSeekFastDataset("/tmp/metadata.json", PROMPT)
+val_size = 1500
+train_size = len(full_dataset) - val_size
+converted_dataset, validation_dataset = random_split(
+    full_dataset, [train_size, val_size]
+)
 print("TRAINING DATA length = ", len(converted_dataset))
 print("VALIDATION DATA length = ", len(validation_dataset))
 
