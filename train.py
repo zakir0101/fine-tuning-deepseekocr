@@ -1,50 +1,24 @@
 import os
-import tempfile
-
-
 from unsloth import is_bf16_supported, FastVisionModel
-
-import json
-from pathlib import Path
-import sys
-import fitz
 import torch
-import math
-from dataclasses import dataclass
-from typing import Dict, List, Any, Tuple
-from PIL import Image, ImageOps
-from torch.nn.utils.rnn import pad_sequence
-import io
 from transformers import Trainer, TrainingArguments, AutoModel
 from collator import DeepSeekOCRDataCollator
 from transformers import TrainerCallback
-from torch.utils.data import Dataset, random_split
 
-# from deepseek_ocr.modeling_deepseekocr import (
-#     format_messages,
-#     text_encode,
-#     BasicImageTransform,
-#     dynamic_preprocess,
-# )
 from utils import (
     BASE_MODEL_PATH,
     LOG_DIR,
     MODEL_NAME,
     OUTPUT_DIR,
-    PROMPT,
-    convert_to_conversation,
     load_training_dataset,
 )
 
 
 os.environ["UNSLOTH_WARN_UNINITIALIZED"] = "0"
-local_rank = int(os.environ.get("LOCAL_RANK", -1))
 
 model, tokenizer = FastVisionModel.from_pretrained(
     BASE_MODEL_PATH,
     load_in_4bit=False,  # Use 4bit to reduce memory use. False for 16bit LoRA.
-    # CRITICAL: Map the model to the specific GPU for this process
-    device_map={"": f"cuda:{local_rank}"},
     auto_model=AutoModel,
     trust_remote_code=True,
     unsloth_force_compile=True,
@@ -71,53 +45,10 @@ model = FastVisionModel.get_peft_model(
     loftq_config=None,  # And LoftQ
     # target_modules = "all-linear", # Optional now! Can specify a list if needed
 )
-# ADD THESE LINES HERE:
-if torch.distributed.is_initialized():
-    # Wrap the model properly for DDP with static graph
-    from torch.nn.parallel import DistributedDataParallel as DDP
-
-    # This tells DDP the computation graph won't change
-    if hasattr(model, "_set_static_graph"):
-        model._set_static_graph()
 
 
-# root = Path("/home/zakir/IGCSE_DATA")
-# converted_dataset, validation_dataset = load_training_dataset()
-# --- 1. THE NEW DATASET CLASS ---
-class DeepSeekFastDataset(Dataset):
-    def __init__(self, meta_file_path, instruction):
-        print(f"Loading metadata from {meta_file_path}...")
-        with open(meta_file_path, "r") as f:
-            self.data = json.load(f)
-        self.instruction = instruction
-        print(f"Dataset loaded. Size: {len(self.data)}")
+converted_dataset, validation_dataset = load_training_dataset()
 
-    def __len__(self):
-        return len(self.data)
-
-    def __getitem__(self, idx):
-        item = self.data[idx]
-
-        try:
-            # Ultra-fast load from disk
-            image = Image.open(item["img_path"]).convert("RGB")
-        except:
-            # Fallback for corruption
-            image = Image.new("RGB", (640, 640), color="black")
-
-        # Use your existing utility function
-        return convert_to_conversation(
-            image, item["raw_output"], self.instruction
-        )
-
-
-# converted_dataset, validation_dataset = load_training_dataset()
-full_dataset = DeepSeekFastDataset("/tmp/metadata.json", PROMPT)
-val_size = 1500
-train_size = len(full_dataset) - val_size
-converted_dataset, validation_dataset = random_split(
-    full_dataset, [train_size, val_size]
-)
 print("TRAINING DATA length = ", len(converted_dataset))
 print("VALIDATION DATA length = ", len(validation_dataset))
 
@@ -151,15 +82,14 @@ class SanityCheckCallback(TrainerCallback):
 trainer = Trainer(
     model=model,
     tokenizer=tokenizer,
-    data_collator=data_collator,  # Must use!
-    # train_dataset=converted_dataset,
-    train_dataset=converted_dataset,  # <--- CHANGED: Uses only the training split
-    eval_dataset=validation_dataset,  # <--- ADDED: Uses the quarantined real data
+    data_collator=data_collator,
+    train_dataset=converted_dataset,
+    eval_dataset=validation_dataset,
     callbacks=[SanityCheckCallback()],
     args=TrainingArguments(
-        per_device_train_batch_size=1,
-        per_device_eval_batch_size=1,
-        gradient_accumulation_steps=6,
+        per_device_train_batch_size=10,
+        per_device_eval_batch_size=2,
+        gradient_accumulation_steps=2,
         warmup_steps=5,
         # max_steps=750,  # 60
         num_train_epochs=1,  # Set this instead of max_steps for full training runs
@@ -172,16 +102,8 @@ trainer = Trainer(
         bf16=is_bf16_supported(),  # Use bf16 if supported
         output_dir=OUTPUT_DIR,
         # report_to="none",  # For Weights and Biases
-        report_to="tensorboard" if local_rank == 0 else "none",
-        disable_tqdm=True if local_rank != 0 else False,
-        # 1. Enable Checkpointing in the Trainer Args
-        # 2. THE MAGIC FIX: Disable Re-entrant checkpointing
-        # This prevents the "Marked as ready twice" error on Shared Experts
-        # gradient_checkpointing=True,
-        # gradient_checkpointing_kwargs={"use_reentrant": False},
-        # DDP SETTINGS:
-        # ddp_find_unused_parameters=True,
-        dataloader_num_workers=2,
+        report_to="tensorboard",
+        dataloader_num_workers=20,
         # You MUST put the below items for vision finetuning:
         remove_unused_columns=False,
         # --- NEW SETTINGS ADDED BELOW ---
@@ -196,7 +118,7 @@ trainer = Trainer(
         greater_is_better=False,  # Lower loss is better
         logging_dir=LOG_DIR,
         logging_strategy="steps",
-        logging_steps=20,
+        logging_steps=5,
     ),
 )
 
@@ -233,16 +155,16 @@ mname = MODEL_NAME
 
 
 model.push_to_hub(
-    f"zakir0101/{mname}", token="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"
+    f"zakir0101/{mname}", token="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"
 )  # Online saving
 tokenizer.push_to_hub(
-    f"zakir0101/{mname}", token="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"
+    f"zakir0101/{mname}", token="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"
 )  # Online saving
 model.push_to_hub_merged(
     f"zakir0101/{mname}_b16",
     tokenizer,
-    token="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",
+    token="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",
 )
-
+# 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
 model.save_pretrained(mname)  # Local saving
 tokenizer.save_pretrained(mname)

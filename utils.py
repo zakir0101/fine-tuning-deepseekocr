@@ -1,11 +1,9 @@
 import os
 import fitz
-import torch
 from torch.utils.data import Dataset
 import json
 from pathlib import Path
 from PIL import Image
-from pprint import pprint
 import random
 
 is_local = False
@@ -27,18 +25,15 @@ REAL_FILENAME = "mathpix_v1_pdfext_v1_ft5-deepseek.json"
 
 # NOTE: ******************* DIR ****************
 
-# IGCSE_HOME = "./IGCSE_DATA"
-# BASE_MODEL_PATH = "./deepseek_ocr"
-# OUTPUT_DIR = "./outputs"
-# LOG_DIR = "./logs"
-IGCSE_HOME = "/kaggle/input/igcse-dataset/IGCSE_DATA"
-if is_local:
-    IGCSE_HOME = "/mnt/wsl/Drive/IGCSE-NEW/"
-BASE_MODEL_PATH = (
-    "/kaggle/input/deepseekocr/transformers/unsloth/1/deepseek_ocr"
-)
-OUTPUT_DIR = "/kaggle/working/outputs"
-LOG_DIR = "/kaggle/working/logs"
+IGCSE_HOME = "./IGCSE_DATA"
+BASE_MODEL_PATH = "./deepseek_ocr"
+OUTPUT_DIR = "./outputs"
+LOG_DIR = "./logs"
+# IGCSE_HOME = "/kaggle/input/igcse-dataset/IGCSE_DATA"
+# BASE_MODEL_PATH = "/kaggle/input/deepseekocr/transformers/unsloth/1/deepseek_ocr"
+# OUTPUT_DIR = "/kaggle/working/outputs"
+# LOG_DIR = "/kaggle/working/logs"
+
 igcse_root = Path(IGCSE_HOME)
 
 ## Download CONFIG --------------------------
@@ -58,8 +53,6 @@ class DeepSeekOCRLazyDataset(Dataset):
     def __getitem__(self, idx):
         item = self.metadata[idx]
 
-        # 1. Open PDF on the fly (Lazy Loading)
-        # We use a try-except block to handle potential file errors gracefully
         try:
             doc = fitz.open(item["pdf_path"])
             page = doc[item["page"] - 1]
@@ -74,9 +67,6 @@ class DeepSeekOCRLazyDataset(Dataset):
             # Return a black dummy image to prevent crash, or raise error
             image = Image.new("RGB", (640, 640), color="black")
 
-        # 2. Convert to conversation format (Your existing logic)
-        # Note: You need to ensure convert_to_conversation is accessible here
-        # or inline that logic. Assuming it returns the dict expected by collator.
         convo = convert_to_conversation(
             image, item["raw_output"], self.instruction
         )
@@ -114,9 +104,6 @@ def add_training_data_to_list(converted_dataset, p):
         print("found multi choice exam")
         print("[-] SKIPPING")
         return
-        # raise Exception()
-    # else:
-    #     instruction = PROMPT
 
     if not os.path.exists(pdf_path):
         print("PDF_file not FOUND !!", pdf_path)
@@ -138,9 +125,6 @@ def add_training_data_to_list(converted_dataset, p):
             "raw_output": raw_output,
         }
         converted_dataset.append(meta_entry)
-        # metadata_list.append(meta_entry)
-        # image = get_image(doc, page_number)
-        # convo = convert_to_conversation(image, raw_output, instruction)
     doc.close()
 
 
@@ -156,25 +140,8 @@ def load_training_dataset():
     print(f"Indexed {len(metadata_list)} samples.")
 
     random.shuffle(metadata_list)
-    meta_valid = metadata_list[:1500]
-    meta_train = metadata_list[1500:]
-    # Create the PyTorch Dataset
-    # synthetic_dataset = DeepSeekOCRLazyDataset(metadata_list, PROMPT)
-    # json_files = list(igcse_root.glob(f"*/training/*/{REAL_FILENAME}"))
-    # real_dataset = []
-    # for p in json_files:
-    #     add_training_data_to_list(real_dataset, p)
-
-    # print("******************************************************")
-    # print("SYNTHETIC DATA LENGTH = ", len(synthetic_dataset))
-    # print("******************************************************")
-    # print("First before shuffel = ")
-    # pprint(synthetic_dataset[0])
-
-    # print("******************************************************")
-    # print("First After shuffel = ")
-    # pprint(synthetic_dataset[0])
-    # print("******************************************************")
+    meta_valid = metadata_list[:900]
+    meta_train = metadata_list[900:]
 
     converted_dataset = DeepSeekOCRLazyDataset(meta_train, PROMPT)
     validation_dataset = DeepSeekOCRLazyDataset(meta_valid, PROMPT)
