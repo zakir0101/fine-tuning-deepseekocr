@@ -1,21 +1,6 @@
 import os
 import tempfile
 
-# --- CRITICAL FIX START ---
-# 1. Force Unsloth to use a directory we know is writable (/tmp)
-os.environ["UNSLOTH_CACHE"] = "/tmp/unsloth_cache"
-os.environ["XDG_CACHE_HOME"] = "/tmp/xdg_cache"
-
-# 2. Make sure these directories exist
-os.makedirs("/tmp/unsloth_cache", exist_ok=True)
-os.makedirs("/tmp/xdg_cache", exist_ok=True)
-
-# 3. Patch standard cache paths just in case
-os.environ["HF_HOME"] = "/tmp/hf_cache"
-# --- CRITICAL FIX END ---
-
-# NOW you can import unsloth
-
 from unsloth import is_bf16_supported, FastVisionModel
 
 import json
