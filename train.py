@@ -50,10 +50,6 @@ model, tokenizer = FastVisionModel.from_pretrained(
     unsloth_force_compile=True,
     use_gradient_checkpointing="unsloth",  # "unsloth",  # True or "unsloth" for long context
 )
-# ADD THIS AFTER model.forward() is defined
-# Tell DDP the graph structure won't change
-if torch.distributed.is_initialized():
-    model._set_static_graph()  # ← ADD THIS LINE
 
 model = FastVisionModel.get_peft_model(
     model,
@@ -75,6 +71,14 @@ model = FastVisionModel.get_peft_model(
     loftq_config=None,  # And LoftQ
     # target_modules = "all-linear", # Optional now! Can specify a list if needed
 )
+# ADD THESE LINES HERE:
+if torch.distributed.is_initialized():
+    # Wrap the model properly for DDP with static graph
+    from torch.nn.parallel import DistributedDataParallel as DDP
+
+    # This tells DDP the computation graph won't change
+    if hasattr(model, "_set_static_graph"):
+        model._set_static_graph()
 
 
 # root = Path("/home/zakir/IGCSE_DATA")
