@@ -3,21 +3,25 @@ from pathlib import Path
 import os
 import sys
 
-# 1. Fix ModuleNotFoundError
-# Add the current directory to Python path so workers can find 'deepseek_ocr'
-sys.path.append(os.getcwd())
-sys.path.append("/kaggle/working")
+# Create a proper temp directory
+temp_dir = tempfile.mkdtemp(prefix="unsloth_")
 
-# 2. Fix 'NoneType' Compiler Error
-# Force Unsloth to use a specific writable temp directory for caching kernels
-os.environ["UNSLOTH_CACHE_DIR"] = "/tmp/unsloth_cache"
-os.environ["UNSLOTH_COMPILE_DIR"] = "/tmp/unsloth_cache"
-os.environ["HF_HOME"] = "/tmp/hf_home"
+# Set EVERY possible cache variable unsloth might look for
+os.environ["UNSLOTH_COMPILE_DIR"] = temp_dir
+os.environ["UNSLOTH_CACHE_DIR"] = temp_dir
+os.environ["UNSLOTH_ZOO_COMPILE_DIR"] = temp_dir
+os.environ["COMPILE_DIR"] = temp_dir
+os.environ["TMPDIR"] = temp_dir
+os.environ["TEMP"] = temp_dir
+os.environ["TMP"] = temp_dir
+
+# Also HF cache
+os.environ["HF_HOME"] = "/tmp/hf_cache"
 os.environ["TRANSFORMERS_CACHE"] = "/tmp/hf_cache"
 
-os.makedirs("/tmp/unsloth_cache", exist_ok=True)
 os.makedirs("/tmp/hf_cache", exist_ok=True)
-os.makedirs("/tmp/hf_home", exist_ok=True)
+
+os.environ["UNSLOTH_WARN_UNINITIALIZED"] = "0"
 
 from unsloth import is_bf16_supported, FastVisionModel
 
@@ -47,7 +51,6 @@ from utils import (
     load_training_dataset,
 )
 
-os.environ["UNSLOTH_WARN_UNINITIALIZED"] = "0"
 
 local_rank = int(os.environ.get("LOCAL_RANK", -1))
 
