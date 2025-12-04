@@ -1,6 +1,20 @@
 import json
 from pathlib import Path
 import os
+import sys
+
+# 1. Fix ModuleNotFoundError
+# Add the current directory to Python path so workers can find 'deepseek_ocr'
+sys.path.append(os.getcwd())
+sys.path.append("/kaggle/working")
+
+# 2. Fix 'NoneType' Compiler Error
+# Force Unsloth to use a specific writable temp directory for caching kernels
+os.environ["UNSLOTH_CACHE_DIR"] = "/tmp/unsloth_cache"
+os.environ["HF_HOME"] = "/tmp/hf_home"
+
+from unsloth import is_bf16_supported, FastVisionModel
+
 import fitz
 import torch
 import math
@@ -10,7 +24,6 @@ from PIL import Image, ImageOps
 from torch.nn.utils.rnn import pad_sequence
 import io
 from transformers import Trainer, TrainingArguments, AutoModel
-from unsloth import is_bf16_supported, FastVisionModel
 from collator import DeepSeekOCRDataCollator
 from transformers import TrainerCallback
 
