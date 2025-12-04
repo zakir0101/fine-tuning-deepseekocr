@@ -130,6 +130,11 @@ trainer = Trainer(
         # report_to="none",  # For Weights and Biases
         report_to="tensorboard" if local_rank == 0 else "none",
         disable_tqdm=True if local_rank != 0 else False,
+        # 1. Enable Checkpointing in the Trainer Args
+        gradient_checkpointing=True,
+        # 2. THE MAGIC FIX: Disable Re-entrant checkpointing
+        # This prevents the "Marked as ready twice" error on Shared Experts
+        gradient_checkpointing_kwargs={"use_reentrant": False},
         # DDP SETTINGS:
         ddp_find_unused_parameters=True,
         dataloader_num_workers=8,
