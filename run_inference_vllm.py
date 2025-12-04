@@ -27,6 +27,8 @@ def main():
     )
     # igcse_dir = "/home/zakir/IGCSE_DATA"
     igcse_dir = IGCSE_HOME
+    # output_igcse_dir = igcse_dir
+    output_igcse_dir = "/content/IGCSE_DATA"
 
     sub_count = 0
     for subject in os.listdir(igcse_dir):
@@ -51,7 +53,7 @@ def main():
             out_filename = "v1.json"
 
             output_dir = os.path.join(
-                igcse_dir,
+                output_igcse_dir,
                 subject,
                 MODEL_OUTPUT_DIR,
                 exam_name,
