@@ -2,6 +2,7 @@ import json
 from pathlib import Path
 import os
 import sys
+import tempfile
 
 # Create a proper temp directory
 temp_dir = tempfile.mkdtemp(prefix="unsloth_")
