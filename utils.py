@@ -1,3 +1,4 @@
+import os
 import fitz
 import torch
 from torch.utils.data import Dataset
@@ -116,6 +117,10 @@ def add_training_data_to_list(converted_dataset, p):
         # raise Exception()
     # else:
     #     instruction = PROMPT
+
+    if not os.path.exists(pdf_path):
+        print("PDF_file not FOUND !!", pdf_path)
+        return
 
     doc = fitz.open(pdf_path)
 
