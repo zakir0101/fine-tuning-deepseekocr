@@ -6,12 +6,23 @@ from PIL import Image, ImageOps
 from torch.nn.utils.rnn import pad_sequence
 import io
 
-from deepseek_ocr.modeling_deepseekocr import (
-    format_messages,
-    text_encode,
-    BasicImageTransform,
-    dynamic_preprocess,
-)
+import importlib
+
+from utils import BASE_MODEL_PATH
+
+module = importlib.import_module(f"{BASE_MODEL_PATH}.modeling_deepseekocr")
+
+format_messages = module.module.format_messages
+text_encode = module.text_encode
+BasicImageTransform = module.BasicImageTransformk
+dynamic_preprocess = module.dynamic_preprocess
+
+# from deepseek_ocr.modeling_deepseekocr import (
+#     format_messages,
+#     text_encode,
+#     BasicImageTransform,
+#     dynamic_preprocess,
+# )
 
 
 @dataclass
