@@ -11,7 +11,13 @@ sys.path.append("/kaggle/working")
 # 2. Fix 'NoneType' Compiler Error
 # Force Unsloth to use a specific writable temp directory for caching kernels
 os.environ["UNSLOTH_CACHE_DIR"] = "/tmp/unsloth_cache"
+os.environ["UNSLOTH_COMPILE_DIR"] = "/tmp/unsloth_cache"
 os.environ["HF_HOME"] = "/tmp/hf_home"
+os.environ["TRANSFORMERS_CACHE"] = "/tmp/hf_cache"
+
+os.makedirs("/tmp/unsloth_cache", exist_ok=True)
+os.makedirs("/tmp/hf_cache", exist_ok=True)
+os.makedirs("/tmp/hf_home", exist_ok=True)
 
 from unsloth import is_bf16_supported, FastVisionModel
 
