@@ -2,6 +2,8 @@ import os
 import tempfile
 
 
+from unsloth import is_bf16_supported, FastVisionModel
+
 import json
 from pathlib import Path
 import sys
@@ -16,8 +18,6 @@ import io
 from transformers import Trainer, TrainingArguments, AutoModel
 from collator import DeepSeekOCRDataCollator
 from transformers import TrainerCallback
-
-from unsloth import is_bf16_supported, FastVisionModel
 
 # from deepseek_ocr.modeling_deepseekocr import (
 #     format_messages,
