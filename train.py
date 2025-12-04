@@ -1,6 +1,7 @@
 import os
 from unsloth import is_bf16_supported, FastVisionModel
 import torch
+from torch.utils.data import Dataset
 from transformers import Trainer, TrainingArguments, AutoModel
 from collator import DeepSeekOCRDataCollator
 from transformers import TrainerCallback
@@ -10,11 +11,48 @@ from utils import (
     LOG_DIR,
     MODEL_NAME,
     OUTPUT_DIR,
+    PROMPT,
     load_training_dataset,
 )
 
 
 os.environ["UNSLOTH_WARN_UNINITIALIZED"] = "0"
+
+
+class DeepSeekOCRLazyDataset(Dataset):
+    def __init__(self, metadata_list, prompt_instruction):
+        """
+        metadata_list: List of dicts containing {'pdf_path': str, 'page': int, 'raw_output': str}
+        """
+        self.metadata = metadata_list
+        self.instruction = prompt_instruction
+
+    def __len__(self):
+        return len(self.metadata)
+
+    def __getitem__(self, idx):
+        item = self.metadata[idx]
+
+        try:
+            doc = fitz.open(item["pdf_path"])
+            page = doc[item["page"] - 1]
+            mat = fitz.Matrix(2, 2)
+            pix = page.get_pixmap(matrix=mat)
+            image = Image.frombytes(
+                "RGB", [pix.width, pix.height], pix.samples
+            )
+            doc.close()  # CRITICAL: Close file handle
+        except Exception as e:
+            print(f"Error loading {item['pdf_path']} page {item['page']}: {e}")
+            # Return a black dummy image to prevent crash, or raise error
+            image = Image.new("RGB", (640, 640), color="black")
+
+        convo = convert_to_conversation(
+            image, item["raw_output"], self.instruction
+        )
+
+        return convo
+
 
 model, tokenizer = FastVisionModel.from_pretrained(
     BASE_MODEL_PATH,
@@ -47,7 +85,9 @@ model = FastVisionModel.get_peft_model(
 )
 
 
-converted_dataset, validation_dataset = load_training_dataset()
+meta_train, meta_valid = load_training_dataset()
+converted_dataset = DeepSeekOCRLazyDataset(meta_train, PROMPT)
+validation_dataset = DeepSeekOCRLazyDataset(meta_valid, PROMPT)
 
 print("TRAINING DATA length = ", len(converted_dataset))
 print("VALIDATION DATA length = ", len(validation_dataset))

@@ -1,6 +1,7 @@
 import os
 import fitz
-from torch.utils.data import Dataset
+
+# from torch.utils.data import Dataset
 import json
 from pathlib import Path
 from PIL import Image
@@ -37,41 +38,6 @@ LOG_DIR = "./logs"
 igcse_root = Path(IGCSE_HOME)
 
 ## Download CONFIG --------------------------
-
-
-class DeepSeekOCRLazyDataset(Dataset):
-    def __init__(self, metadata_list, prompt_instruction):
-        """
-        metadata_list: List of dicts containing {'pdf_path': str, 'page': int, 'raw_output': str}
-        """
-        self.metadata = metadata_list
-        self.instruction = prompt_instruction
-
-    def __len__(self):
-        return len(self.metadata)
-
-    def __getitem__(self, idx):
-        item = self.metadata[idx]
-
-        try:
-            doc = fitz.open(item["pdf_path"])
-            page = doc[item["page"] - 1]
-            mat = fitz.Matrix(2, 2)
-            pix = page.get_pixmap(matrix=mat)
-            image = Image.frombytes(
-                "RGB", [pix.width, pix.height], pix.samples
-            )
-            doc.close()  # CRITICAL: Close file handle
-        except Exception as e:
-            print(f"Error loading {item['pdf_path']} page {item['page']}: {e}")
-            # Return a black dummy image to prevent crash, or raise error
-            image = Image.new("RGB", (640, 640), color="black")
-
-        convo = convert_to_conversation(
-            image, item["raw_output"], self.instruction
-        )
-
-        return convo
 
 
 def convert_to_conversation(image_pil, raw_output, instruction):
@@ -143,9 +109,10 @@ def load_training_dataset():
     meta_valid = metadata_list[:900]
     meta_train = metadata_list[900:]
 
-    converted_dataset = DeepSeekOCRLazyDataset(meta_train, PROMPT)
-    validation_dataset = DeepSeekOCRLazyDataset(meta_valid, PROMPT)
-    return converted_dataset, validation_dataset
+    return meta_train, meta_valid
+    # converted_dataset = DeepSeekOCRLazyDataset(meta_train, PROMPT)
+    # validation_dataset = DeepSeekOCRLazyDataset(meta_valid, PROMPT)
+    # return converted_dataset, validation_dataset
 
 
 if __name__ == "__main__":
