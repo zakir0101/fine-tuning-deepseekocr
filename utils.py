@@ -150,6 +150,7 @@ def load_training_dataset():
 
     print(f"Indexed {len(metadata_list)} samples.")
 
+    random.shuffle(metadata_list)
     # Create the PyTorch Dataset
     synthetic_dataset = DeepSeekOCRLazyDataset(metadata_list, PROMPT)
     # json_files = list(igcse_root.glob(f"*/training/*/{REAL_FILENAME}"))
@@ -157,12 +158,11 @@ def load_training_dataset():
     # for p in json_files:
     #     add_training_data_to_list(real_dataset, p)
 
-    print("******************************************************")
-    print("SYNTHETIC DATA LENGTH = ", len(synthetic_dataset))
-    print("******************************************************")
-    print("First before shuffel = ")
-    pprint(synthetic_dataset[0])
-    random.shuffle(synthetic_dataset)
+    # print("******************************************************")
+    # print("SYNTHETIC DATA LENGTH = ", len(synthetic_dataset))
+    # print("******************************************************")
+    # print("First before shuffel = ")
+    # pprint(synthetic_dataset[0])
 
     print("******************************************************")
     print("First After shuffel = ")
