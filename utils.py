@@ -21,8 +21,8 @@ PROMPT = "<image>\n<|grounding|>Convert the document to markdown."
 
 PROMPT_MULTI_CHOICE = "<image>\n<|grounding|>Convert the document to markdown. and extract the structural elements for each MULTI-CHOICE question"
 
-SYNTHETIC_FILENAME = "synthetic_v1_ft4-deepseek.json"
-REAL_FILENAME = "mathpix_v1_pdfext_v1_ft4-deepseek.json"
+SYNTHETIC_FILENAME = "synthetic_v1_ft5-deepseek.json"
+REAL_FILENAME = "mathpix_v1_pdfext_v1_ft5-deepseek.json"
 
 # NOTE: ******************* DIR ****************
 
