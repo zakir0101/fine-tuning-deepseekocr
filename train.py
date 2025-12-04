@@ -131,7 +131,7 @@ trainer = Trainer(
         report_to="tensorboard" if local_rank == 0 else "none",
         disable_tqdm=True if local_rank != 0 else False,
         # DDP SETTINGS:
-        ddp_find_unused_parameters=False,
+        ddp_find_unused_parameters=True,
         dataloader_num_workers=8,
         # You MUST put the below items for vision finetuning:
         remove_unused_columns=False,
