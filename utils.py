@@ -146,7 +146,7 @@ def load_training_dataset():
     )
     metadata_list = []
     for p in json_files:
-        add_training_data_to_list(synthetic_dataset, p)
+        add_training_data_to_list(metadata_list, p)
 
     print(f"Indexed {len(metadata_list)} samples.")
 
