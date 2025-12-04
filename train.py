@@ -34,6 +34,7 @@ from utils import (
 )
 
 
+os.environ["UNSLOTH_WARN_UNINITIALIZED"] = "0"
 local_rank = int(os.environ.get("LOCAL_RANK", -1))
 
 model, tokenizer = FastVisionModel.from_pretrained(
