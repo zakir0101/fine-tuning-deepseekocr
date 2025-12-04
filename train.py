@@ -173,7 +173,7 @@ trainer = Trainer(
         # gradient_checkpointing_kwargs={"use_reentrant": False},
         # DDP SETTINGS:
         # ddp_find_unused_parameters=True,
-        dataloader_num_workers=8,
+        dataloader_num_workers=2,
         # You MUST put the below items for vision finetuning:
         remove_unused_columns=False,
         # --- NEW SETTINGS ADDED BELOW ---
