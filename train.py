@@ -45,7 +45,7 @@ model, tokenizer = FastVisionModel.from_pretrained(
     auto_model=AutoModel,
     trust_remote_code=True,
     unsloth_force_compile=True,
-    use_gradient_checkpointing=True,  # "unsloth",  # True or "unsloth" for long context
+    # use_gradient_checkpointing=True,  # "unsloth",  # True or "unsloth" for long context
 )
 
 model = FastVisionModel.get_peft_model(
