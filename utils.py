@@ -151,8 +151,10 @@ def load_training_dataset():
     print(f"Indexed {len(metadata_list)} samples.")
 
     random.shuffle(metadata_list)
+    meta_valid = metadata_list[:1500]
+    meta_train = metadata_list[1500:]
     # Create the PyTorch Dataset
-    synthetic_dataset = DeepSeekOCRLazyDataset(metadata_list, PROMPT)
+    # synthetic_dataset = DeepSeekOCRLazyDataset(metadata_list, PROMPT)
     # json_files = list(igcse_root.glob(f"*/training/*/{REAL_FILENAME}"))
     # real_dataset = []
     # for p in json_files:
@@ -164,13 +166,13 @@ def load_training_dataset():
     # print("First before shuffel = ")
     # pprint(synthetic_dataset[0])
 
-    print("******************************************************")
-    print("First After shuffel = ")
-    pprint(synthetic_dataset[0])
-    print("******************************************************")
+    # print("******************************************************")
+    # print("First After shuffel = ")
+    # pprint(synthetic_dataset[0])
+    # print("******************************************************")
 
-    converted_dataset = synthetic_dataset[1500:]
-    validation_dataset = synthetic_dataset[:1500]
+    converted_dataset = DeepSeekOCRLazyDataset(meta_train, PROMPT)
+    validation_dataset = DeepSeekOCRLazyDataset(meta_valid, PROMPT)
     return converted_dataset, validation_dataset
 
 
