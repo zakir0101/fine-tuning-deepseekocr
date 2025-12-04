@@ -1,0 +1,170 @@
+import fitz
+import torch
+from torch.utils.data import Dataset
+import json
+from pathlib import Path
+from PIL import Image
+from pprint import pprint
+import random
+
+is_local = False
+## TRAINing CONFIG --------------------------
+
+IGCSE_HOME = "/workspace/IGCSE_DATA"
+if is_local:
+    IGCSE_HOME = "/mnt/wsl/Drive/IGCSE-NEW/"
+
+MULTIPLE_CHOICE_PAPERS = ["9702_1", "0625_1", "0625_2"]
+
+MODEL_NAME = "ftv4-ocr"
+MODEL_NAME_SUFFIX = "_b16"
+MODEL_OUTPUT_DIR = "ft4-deepseekocr"
+
+# PROMPT = "<image>\n<|grounding|>Convert the document to markdown. extract the questions elements "
+PROMPT = "<image>\n<|grounding|>Convert the document to markdown."
+
+PROMPT_MULTI_CHOICE = "<image>\n<|grounding|>Convert the document to markdown. and extract the structural elements for each MULTI-CHOICE question"
+
+SYNTHETIC_FILENAME = "synthetic_v1_ft4-deepseek.json"
+REAL_FILENAME = "mathpix_v1_pdfext_v1_ft4-deepseek.json"
+
+igcse_root = Path(IGCSE_HOME)
+
+## Download CONFIG --------------------------
+
+
+class DeepSeekOCRLazyDataset(Dataset):
+    def __init__(self, metadata_list, prompt_instruction):
+        """
+        metadata_list: List of dicts containing {'pdf_path': str, 'page': int, 'raw_output': str}
+        """
+        self.metadata = metadata_list
+        self.instruction = prompt_instruction
+
+    def __len__(self):
+        return len(self.metadata)
+
+    def __getitem__(self, idx):
+        item = self.metadata[idx]
+
+        # 1. Open PDF on the fly (Lazy Loading)
+        # We use a try-except block to handle potential file errors gracefully
+        try:
+            doc = fitz.open(item["pdf_path"])
+            page = doc[item["page"] - 1]
+            mat = fitz.Matrix(2, 2)
+            pix = page.get_pixmap(matrix=mat)
+            image = Image.frombytes(
+                "RGB", [pix.width, pix.height], pix.samples
+            )
+            doc.close()  # CRITICAL: Close file handle
+        except Exception as e:
+            print(f"Error loading {item['pdf_path']} page {item['page']}: {e}")
+            # Return a black dummy image to prevent crash, or raise error
+            image = Image.new("RGB", (640, 640), color="black")
+
+        # 2. Convert to conversation format (Your existing logic)
+        # Note: You need to ensure convert_to_conversation is accessible here
+        # or inline that logic. Assuming it returns the dict expected by collator.
+        convo = convert_to_conversation(
+            image, item["raw_output"], self.instruction
+        )
+
+        return convo
+
+
+def convert_to_conversation(image_pil, raw_output, instruction):
+    """Convert dataset sample to conversation format"""
+    conversation = [
+        {
+            "role": "<|User|>",
+            "content": instruction,
+            "images": [image_pil],
+        },
+        {"role": "<|Assistant|>", "content": raw_output},
+    ]
+    return {"messages": conversation}
+
+
+def get_image(doc, page_number: int):
+    page = doc[page_number - 1]
+    mat = fitz.Matrix(2, 2)
+    pix = page.get_pixmap(matrix=mat)
+    img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
+    return img
+
+
+def add_training_data_to_list(converted_dataset, p):
+    subject_name, exam_name = (parts := p.absolute().parts)[-4], parts[-2]
+    pdf_path = Path(IGCSE_HOME, subject_name, "exams", f"{exam_name}.pdf")
+    paper_name = exam_name.split("_")[-1][0]
+    subject_paper_id = subject_name + "_" + paper_name
+    if subject_paper_id in MULTIPLE_CHOICE_PAPERS:
+        print("found multi choice exam")
+        print("[-] SKIPPING")
+        return
+        # raise Exception()
+    # else:
+    #     instruction = PROMPT
+
+    doc = fitz.open(pdf_path)
+
+    with p.open("r", encoding="utf-8") as f:
+        json_data: dict = json.loads(f.read())
+
+    for content in json_data.values():
+        page_number = content["page"]
+        if page_number > len(doc):
+            break
+        raw_output = content["raw_output"]
+        meta_entry = {
+            "pdf_path": pdf_path,
+            "page": page_number,
+            "raw_output": raw_output,
+        }
+        converted_dataset.append(meta_entry)
+        # metadata_list.append(meta_entry)
+        # image = get_image(doc, page_number)
+        # convo = convert_to_conversation(image, raw_output, instruction)
+    doc.close()
+
+
+def load_training_dataset():
+
+    json_files = list(
+        igcse_root.glob(f"synthetic/training/*/{SYNTHETIC_FILENAME}")
+    )
+    metadata_list = []
+    for p in json_files:
+        add_training_data_to_list(synthetic_dataset, p)
+
+    print(f"Indexed {len(metadata_list)} samples.")
+
+    # Create the PyTorch Dataset
+    synthetic_dataset = DeepSeekOCRLazyDataset(metadata_list, PROMPT)
+    # json_files = list(igcse_root.glob(f"*/training/*/{REAL_FILENAME}"))
+    # real_dataset = []
+    # for p in json_files:
+    #     add_training_data_to_list(real_dataset, p)
+
+    print("******************************************************")
+    print("SYNTHETIC DATA LENGTH = ", len(synthetic_dataset))
+    print("******************************************************")
+    print("First before shuffel = ")
+    pprint(synthetic_dataset[0])
+    random.shuffle(synthetic_dataset)
+
+    print("******************************************************")
+    print("First After shuffel = ")
+    pprint(synthetic_dataset[0])
+    print("******************************************************")
+
+    converted_dataset = synthetic_dataset[1000:]
+    validation_dataset = synthetic_dataset[:1000]
+    return converted_dataset, validation_dataset
+
+
+if __name__ == "__main__":
+    train_d, valid_d = load_training_dataset()
+    print("Training length = ", len(train_d))
+    print("validation length = ", len(valid_d))
