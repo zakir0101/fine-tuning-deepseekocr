@@ -132,7 +132,7 @@ trainer = Trainer(
         disable_tqdm=True if local_rank != 0 else False,
         # DDP SETTINGS:
         ddp_find_unused_parameters=True,
-        dataloader_num_workers=8,
+        dataloader_num_workers=0,
         # You MUST put the below items for vision finetuning:
         remove_unused_columns=False,
         # --- NEW SETTINGS ADDED BELOW ---
