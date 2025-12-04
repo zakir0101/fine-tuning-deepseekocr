@@ -1,18 +1,20 @@
 import os
 import tempfile
 
-# CRITICAL: Set this BEFORE any imports
-# unsloth_zoo looks for this specific variable
-compile_dir = tempfile.mkdtemp(prefix="unsloth_compile_")
-os.environ["HOME"] = compile_dir  # unsloth_zoo uses HOME to find cache dir
-os.makedirs(f"{compile_dir}/.cache", exist_ok=True)
+# --- CRITICAL FIX START ---
+# 1. Force Unsloth to use a directory we know is writable (/tmp)
+os.environ["UNSLOTH_CACHE"] = "/tmp/unsloth_cache"
+os.environ["XDG_CACHE_HOME"] = "/tmp/xdg_cache"
 
-# Also set all cache paths
+# 2. Make sure these directories exist
+os.makedirs("/tmp/unsloth_cache", exist_ok=True)
+os.makedirs("/tmp/xdg_cache", exist_ok=True)
+
+# 3. Patch standard cache paths just in case
 os.environ["HF_HOME"] = "/tmp/hf_cache"
-os.environ["TRANSFORMERS_CACHE"] = "/tmp/hf_cache"
-os.makedirs("/tmp/hf_cache", exist_ok=True)
+# --- CRITICAL FIX END ---
 
-os.environ["UNSLOTH_WARN_UNINITIALIZED"] = "0"
+# NOW you can import unsloth
 
 from unsloth import is_bf16_supported, FastVisionModel
 
