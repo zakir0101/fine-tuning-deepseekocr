@@ -14,12 +14,12 @@ from unsloth import is_bf16_supported, FastVisionModel
 from collator import DeepSeekOCRDataCollator
 from transformers import TrainerCallback
 
-from deepseek_ocr.modeling_deepseekocr import (
-    format_messages,
-    text_encode,
-    BasicImageTransform,
-    dynamic_preprocess,
-)
+# from deepseek_ocr.modeling_deepseekocr import (
+#     format_messages,
+#     text_encode,
+#     BasicImageTransform,
+#     dynamic_preprocess,
+# )
 from utils import (
     BASE_MODEL_PATH,
     LOG_DIR,
