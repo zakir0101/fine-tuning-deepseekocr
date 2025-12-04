@@ -47,8 +47,8 @@ model, tokenizer = FastVisionModel.from_pretrained(
     device_map={"": f"cuda:{local_rank}"},
     auto_model=AutoModel,
     trust_remote_code=True,
-    unsloth_force_compile=False,
-    use_gradient_checkpointing=False,  # "unsloth",  # True or "unsloth" for long context
+    unsloth_force_compile=True,
+    use_gradient_checkpointing=True,  # "unsloth",  # True or "unsloth" for long context
 )
 
 model = FastVisionModel.get_peft_model(
@@ -134,7 +134,7 @@ class SanityCheckCallback(TrainerCallback):
 
     def on_step_end(self, args, state, control, **kwargs):
         # Trigger eval at Step 20 just to check for Crashes/OOM
-        if state.global_step == 20:
+        if state.global_step == 10:
             print("\n🚨 TRIGGERING EARLY SANITY CHECK EVALUATION (Step 20) 🚨")
             control.should_evaluate = True
         return control
@@ -167,12 +167,12 @@ trainer = Trainer(
         report_to="tensorboard" if local_rank == 0 else "none",
         disable_tqdm=True if local_rank != 0 else False,
         # 1. Enable Checkpointing in the Trainer Args
-        gradient_checkpointing=True,
         # 2. THE MAGIC FIX: Disable Re-entrant checkpointing
         # This prevents the "Marked as ready twice" error on Shared Experts
-        gradient_checkpointing_kwargs={"use_reentrant": False},
+        # gradient_checkpointing=True,
+        # gradient_checkpointing_kwargs={"use_reentrant": False},
         # DDP SETTINGS:
-        ddp_find_unused_parameters=True,
+        # ddp_find_unused_parameters=True,
         dataloader_num_workers=8,
         # You MUST put the below items for vision finetuning:
         remove_unused_columns=False,
