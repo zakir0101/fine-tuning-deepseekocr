@@ -5,9 +5,36 @@ from typing import Dict, List, Any, Tuple
 from PIL import Image, ImageOps
 from torch.nn.utils.rnn import pad_sequence
 import io
+import sys
 
-# import importlib
+import importlib
 from utils import BASE_MODEL_PATH
+
+module_file = f"{BASE_MODEL_PATH}/modeling_deepseekocr.py"
+
+# Load the module with proper package context
+spec = importlib.util.spec_from_file_location(
+    "deepseek_ocr.modeling_deepseekocr",  # Give it a package name
+    module_file,
+    submodule_search_locations=[BASE_MODEL_PATH],
+)
+module = importlib.util.module_from_spec(spec)
+
+# Set the package so relative imports work
+module.__package__ = "deepseek_ocr"
+sys.modules["deepseek_ocr.modeling_deepseekocr"] = module
+
+# Add parent path
+sys.path.insert(0, "/kaggle/input/deepseekocr/transformers/unsloth/1")
+
+# Now execute
+spec.loader.exec_module(module)
+
+# Get what you need
+format_messages = module.format_messages
+text_encode = module.text_encode
+BasicImageTransform = module.BasicImageTransform
+dynamic_preprocess = module.dynamic_preprocess
 
 # module = importlib.import_module(f"{BASE_MODEL_PATH}.modeling_deepseekocr")
 # format_messages = module.module.format_messages
@@ -15,15 +42,12 @@ from utils import BASE_MODEL_PATH
 # BasicImageTransform = module.BasicImageTransformk
 # dynamic_preprocess = module.dynamic_preprocess
 
-import sys
-
-sys.path.insert(0, BASE_MODEL_PATH)
-from modeling_deepseekocr import (
-    format_messages,
-    text_encode,
-    BasicImageTransform,
-    dynamic_preprocess,
-)
+# from modeling_deepseekocr import (
+#     format_messages,
+#     text_encode,
+#     BasicImageTransform,
+#     dynamic_preprocess,
+# )
 
 
 @dataclass
