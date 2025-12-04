@@ -50,6 +50,10 @@ model, tokenizer = FastVisionModel.from_pretrained(
     unsloth_force_compile=True,
     use_gradient_checkpointing="unsloth",  # "unsloth",  # True or "unsloth" for long context
 )
+# ADD THIS AFTER model.forward() is defined
+# Tell DDP the graph structure won't change
+if torch.distributed.is_initialized():
+    model._set_static_graph()  # ← ADD THIS LINE
 
 model = FastVisionModel.get_peft_model(
     model,
