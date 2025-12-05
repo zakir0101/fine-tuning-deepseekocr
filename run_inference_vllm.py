@@ -60,7 +60,12 @@ def main():
             )
             os.makedirs(output_dir, exist_ok=True)
             output_path = os.path.join(output_dir, out_filename)
-            if os.path.exists(output_path):
+            output_path_source = os.path.join(
+                igcse_dir, subject, MODEL_OUTPUT_DIR, exam_name, out_filename
+            )
+            if os.path.exists(output_path) or os.path.exists(
+                output_path_source
+            ):
                 continue
 
             doc = fitz.open(path_pdf)
