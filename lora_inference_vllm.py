@@ -1,30 +1,5 @@
 import os
 import sys
-
-# FIX: only on Kaggle
-
-# --- FIX FOR KAGGLE/VLLM CUDA PATHS ---
-# 1. Identify the actual CUDA path on Kaggle (usually /usr/local/cuda)
-cuda_path = "/usr/local/cuda"
-
-# If you specifically installed 12.8 and it exists at /usr/local/cuda-12.8, use that:
-if os.path.exists("/usr/local/cuda-12.8"):
-    cuda_path = "/usr/local/cuda-12.8"
-
-# 2. Force these into the environment so spawned processes inherit them
-os.environ["CUDA_HOME"] = cuda_path
-os.environ["PATH"] = f"{cuda_path}/bin:" + os.environ.get("PATH", "")
-os.environ["LD_LIBRARY_PATH"] = f"{cuda_path}/lib64:" + os.environ.get(
-    "LD_LIBRARY_PATH", ""
-)
-os.environ["LIBRARY_PATH"] = (
-    f"/usr/local/nvidia/lib64:{cuda_path}/lib64:/usr/lib/x86_64-linux-gnu:"
-    + os.environ.get("LIBRARY_PATH", "")
-)
-
-# 3. Important: FlashInfer/Ninja often needs CXX set to g++ to avoid compatibility issues
-os.environ["CXX"] = "g++"
-
 import builtins
 from utils import MODEL_NAME, MODEL_NAME_SUFFIX, PROMPT
 from vllm import LLM, SamplingParams
