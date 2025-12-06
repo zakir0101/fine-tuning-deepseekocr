@@ -66,12 +66,13 @@ def main():
             if os.path.exists(output_path) or os.path.exists(
                 output_path_source
             ):
+                print("[-] skipping ", exam_name, "already [Done]")
                 continue
 
             doc = fitz.open(path_pdf)
             out = []
             counter = 0
-            for i in range(0, len(doc), 2):
+            for i in range(0, len(doc), 30):
                 counter += 1
                 mat = fitz.Matrix(4, 4)
                 # pix = page_doc.get_pixmap(matrix=mat)
