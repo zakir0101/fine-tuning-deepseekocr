@@ -80,7 +80,7 @@ def main():
                 #     "RGB", [pix.width, pix.height], pix.samples
                 # )
                 images = []
-                for j in range(2):
+                for j in range(30):
 
                     if (i + j) >= len(doc):
                         continue
