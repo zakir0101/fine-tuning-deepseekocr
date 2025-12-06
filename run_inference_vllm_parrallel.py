@@ -45,13 +45,12 @@ def get_all_tasks():
             path_pdf = os.path.join(exams_path, pdf)
             exam_name = pdf.split(".")[0]
 
-            # Filter logic (Year check)
-            try:
-                year = int(exam_name.split("_")[1][1:])
-                if year != 25:
-                    continue
-            except:
-                continue
+            # try:
+            #     year = int(exam_name.split("_")[1][1:])
+            #     if year != 25:
+            #         continue
+            # except:
+            #     continue
 
             # Output check
             out_filename = "v1.json"
