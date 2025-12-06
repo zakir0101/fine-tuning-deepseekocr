@@ -28,7 +28,7 @@ def main():
     # igcse_dir = "/home/zakir/IGCSE_DATA"
     igcse_dir = IGCSE_HOME
     # output_igcse_dir = igcse_dir
-    output_igcse_dir = "/content/IGCSE_DATA"
+    output_igcse_dir = "/kaggle/working/IGCSE_DATA"
 
     sub_count = 0
     for subject in os.listdir(igcse_dir):
