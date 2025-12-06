@@ -40,9 +40,6 @@ def main():
             path_pdf = os.path.join(igcse_dir, subject, "exams", pdf)
             exam_name = pdf.split(".")[0]
             year = int(exam_name.split("_")[1][1:])
-            if year != 25:
-                print("skippning year ", year)
-                continue
 
             paper_name = exam_name.split("_")[-1][0]
             subject_paper_id = subject + "_" + paper_name

@@ -22,7 +22,7 @@ SUBJECT_METADATA = {
 }
 PAPER_RANGE = range(1, 8)
 VARIANT_RANGE = range(1, 4)
-YEARS = [2025]  # range(2025, 2026)
+YEARS = [2025, 2018, 2012]  # range(2025, 2026)
 
 
 PAPER_TYPES = ["qp"]
