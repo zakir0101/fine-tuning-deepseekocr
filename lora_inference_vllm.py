@@ -50,6 +50,7 @@ def load_lora_model(model_name):
         mm_processor_cache_gb=0,
         logits_processors=[NGramPerReqLogitsProcessor],
         trust_remote_code=True,
+        tensor_parallel_size=2,  # <--- THIS IS THE KEY CHANGE
     )
     sampling_param = SamplingParams(
         temperature=0.0,
